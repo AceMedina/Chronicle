@@ -4,6 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Chronicle</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -24,6 +27,29 @@
         <button class="arcade-btn icon-only" id="settingsBtn" aria-label="Settings">X</button>
       </div>
     </header>
+
+    <!-- Mode Switcher -->
+    <section class="mode-wrapper" aria-label="Difficulty Selection">
+      <div class="mode-toggle">
+        <button class="mode-btn active" data-mode="easy">Easy</button>
+        <button class="mode-btn" data-mode="medium">Medium</button>
+        <button class="mode-btn" data-mode="hard">Hard</button>
+      </div>
+    </section>
+
+    <!-- Search Bar -->
+    <section class="search-section" aria-label="Watch Search">
+      <div class="search-bar">
+        <input 
+          type="text" 
+          id="searchInput" 
+          class="search-input" 
+          placeholder="Search watch..." 
+          autocomplete="off"
+        >
+        <button class="arcade-btn submit-btn" id="guessBtn">Guess</button>
+      </div>
+    </section>
   </main>
 
 </body>
