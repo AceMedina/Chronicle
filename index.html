@@ -6,142 +6,54 @@
   <title>Chronicle</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Kanit:ital,wght@1,900&family=Plus+Jakarta+Sans:ital,wght@0,600;0,700;0,800;1,800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-  <main class="game-wrapper">
-    <!-- Header -->
-    <header class="game-header">
-      <div class="header-side left">
-        <button class="arcade-btn icon-only" id="helpBtn" aria-label="Help">?</button>
-      </div>
+  <!-- Help button -->
+  <button class="help-btn" id="openHelpBtn" aria-label="Help">?</button>
 
-      <div class="header-center">
-        <h1 class="game-title">CHRONICLE</h1>
-      </div>
-
-      <div class="header-side right">
-        <button class="arcade-btn icon-only" id="statsBtn" aria-label="Stats">S</button>
-        <button class="arcade-btn icon-only" id="settingsBtn" aria-label="Settings">X</button>
-      </div>
-    </header>
-
-    <!-- Mode Switcher -->
-    <section class="mode-wrapper" aria-label="Difficulty Selection">
-      <div class="mode-toggle">
-        <button class="mode-btn active" data-mode="easy">Easy</button>
-        <button class="mode-btn" data-mode="medium">Medium</button>
-        <button class="mode-btn" data-mode="hard">Hard</button>
-      </div>
-    </section>
-
-    <!-- Search Bar -->
-    <section class="search-section" aria-label="Watch Search">
-      <div class="search-bar">
-        <input 
-          type="text" 
-          id="searchInput" 
-          class="search-input" 
-          placeholder="Search watch or reference..." 
-          autocomplete="off"
-        >
-        <button class="arcade-btn submit-btn" id="guessBtn">Guess</button>
-      </div>
-    </section>
-
-    <!-- Feedback Grid -->
-    <section class="grid-section" id="gridSection" aria-label="Guess Feedback Grid">
-      <!-- Column Headers -->
-      <div class="grid-row grid-header">
-        <div class="header-cell">Brand</div>
-        <div class="header-cell">Origin</div>
-        <div class="header-cell">Category</div>
-        <div class="header-cell">Movement</div>
-        <div class="header-cell">Size</div>
-        <div class="header-cell">Year</div>
-        <div class="header-cell">Price (PHP)</div>
-      </div>
-
-      <!-- Row 1 -->
-      <div class="grid-row">
-        <div class="tile empty"></div>
-        <div class="tile empty"></div>
-        <div class="tile empty"></div>
-        <div class="tile empty"></div>
-        <div class="tile empty"></div>
-        <div class="tile empty"></div>
-        <div class="tile empty"></div>
-      </div>
-
-      <!-- Row 2 -->
-      <div class="grid-row">
-        <div class="tile empty"></div>
-        <div class="tile empty"></div>
-        <div class="tile empty"></div>
-        <div class="tile empty"></div>
-        <div class="tile empty"></div>
-        <div class="tile empty"></div>
-        <div class="tile empty"></div>
-      </div>
-
-      <!-- Row 3 -->
-      <div class="grid-row">
-        <div class="tile empty"></div>
-        <div class="tile empty"></div>
-        <div class="tile empty"></div>
-        <div class="tile empty"></div>
-        <div class="tile empty"></div>
-        <div class="tile empty"></div>
-        <div class="tile empty"></div>
-      </div>
-
-      <!-- Row 4 -->
-      <div class="grid-row">
-        <div class="tile empty"></div>
-        <div class="tile empty"></div>
-        <div class="tile empty"></div>
-        <div class="tile empty"></div>
-        <div class="tile empty"></div>
-        <div class="tile empty"></div>
-        <div class="tile empty"></div>
-      </div>
-
-      <!-- Row 5 -->
-      <div class="grid-row">
-        <div class="tile empty"></div>
-        <div class="tile empty"></div>
-        <div class="tile empty"></div>
-        <div class="tile empty"></div>
-        <div class="tile empty"></div>
-        <div class="tile empty"></div>
-        <div class="tile empty"></div>
-      </div>
-
-      <!-- Row 6 -->
-      <div class="grid-row">
-        <div class="tile empty"></div>
-        <div class="tile empty"></div>
-        <div class="tile empty"></div>
-        <div class="tile empty"></div>
-        <div class="tile empty"></div>
-        <div class="tile empty"></div>
-        <div class="tile empty"></div>
-      </div>
-
-      <!-- Row 7 -->
-      <div class="grid-row">
-        <div class="tile empty"></div>
-        <div class="tile empty"></div>
-        <div class="tile empty"></div>
-        <div class="tile empty"></div>
-        <div class="tile empty"></div>
-        <div class="tile empty"></div>
-        <div class="tile empty"></div>
-      </div>
-    </section>
+  <!-- Landing page -->
+  <main class="landing-view">
+    <div class="landing-content">
+      <h1 class="logo-title">CHRONICLE</h1>
+      <p class="tagline">The Daily Watch Puzzle.</p>
+      <p class="sub-tagline">Guess the mystery watch!</p>
+      <button class="play-btn" id="playBtn">Play</button>
+    </div>
   </main>
 
+  <!-- Help modal -->
+  <div class="modal-overlay" id="helpModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2 class="modal-title">How to Play</h2>
+        <button class="modal-close" id="closeHelpBtn" aria-label="Close">×</button>
+      </div>
+
+      <p class="modal-text">Guess the daily mystery watch in <strong>7 tries</strong>.</p>
+      <p class="modal-text">Each guess tests 7 attributes: Brand, Origin, Category, Movement, Size, Year, and Price.</p>
+
+      <div class="legend-box">
+        <div class="legend-row">
+          <span class="chip chip-green"></span>
+          <span><strong>Green:</strong> Exact match</span>
+        </div>
+        <div class="legend-row">
+          <span class="chip chip-yellow"></span>
+          <span><strong>Yellow:</strong> Close / Direction indicator</span>
+        </div>
+        <div class="legend-row">
+          <span class="chip chip-grey"></span>
+          <span><strong>Grey:</strong> No match</span>
+        </div>
+      </div>
+
+      <button class="modal-ack-btn" id="ackHelpBtn">Got it</button>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
 </body>
 </html>
