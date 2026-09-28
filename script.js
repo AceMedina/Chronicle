@@ -1,6 +1,12 @@
-// State
+// API Configuration
+const API_BASE_URL = "https://watch-api-eight.vercel.app";
+const API_KEY = "chronicle-api-002";
+
+// Game State
 let currentMode = "easy";
 let failedAttempts = 0;
+let selectedWatch = null;
+let debounceTimer = null;
 
 const MODE_CONFIG = {
   easy: { maxGuesses: 10, hasSilhouette: true, unlockAt: 0 },
@@ -15,7 +21,7 @@ const playBtn = document.getElementById("playBtn");
 const navLogoBtn = document.getElementById("navLogoBtn");
 const modeButtons = document.querySelectorAll(".mode-btn");
 
-// Help Modal
+// Help Modal Elements
 const helpModal = document.getElementById("helpModal");
 const openHelpBtn = document.getElementById("openHelpBtn");
 const inGameHelpBtn = document.getElementById("inGameHelpBtn");
@@ -28,7 +34,12 @@ const silhouetteModal = document.getElementById("silhouetteModal");
 const ackSilhouetteBtn = document.getElementById("ackSilhouetteBtn");
 const gridRowsContainer = document.getElementById("gridRows");
 
-// Help modal toggle
+// Search & Autocomplete Elements
+const searchInput = document.getElementById("searchInput");
+const autocompleteDropdown = document.getElementById("autocompleteDropdown");
+const guessSubmitBtn = document.getElementById("guessSubmitBtn");
+
+// Help modal handlers
 function openHelp() {
   helpModal.classList.add("open");
 }
@@ -46,7 +57,7 @@ helpModal.addEventListener("click", (e) => {
   if (e.target === helpModal) closeHelp();
 });
 
-// Toast message
+// Toast notification
 function showToast(text) {
   const existing = document.querySelector(".toast-msg");
   if (existing) existing.remove();
@@ -58,7 +69,7 @@ function showToast(text) {
   setTimeout(() => toast.remove(), 2200);
 }
 
-// Silhouette modal toggle
+// Silhouette modal handlers
 function openSilhouette() {
   const config = MODE_CONFIG[currentMode];
   if (currentMode === "medium" && failedAttempts < config.unlockAt) {
@@ -80,12 +91,12 @@ silhouetteModal.addEventListener("click", (e) => {
   if (e.target === silhouetteModal) closeSilhouette();
 });
 
-// Screen navigation
+// View navigation
 playBtn.addEventListener("click", () => {
   landingView.style.display = "none";
   openHelpBtn.style.display = "none";
   gameView.style.display = "flex";
-  document.getElementById("searchInput").focus();
+  searchInput.focus();
 });
 
 navLogoBtn.addEventListener("click", () => {
@@ -106,7 +117,7 @@ function renderEmptyRows(count) {
   }
 }
 
-// Silhouette button appearance
+// Silhouette button UI state
 function updateSilhouetteButton() {
   const config = MODE_CONFIG[currentMode];
   if (!config.hasSilhouette) {
@@ -122,7 +133,7 @@ function updateSilhouetteButton() {
   }
 }
 
-// Difficulty toggle handlers
+// Difficulty mode toggle
 modeButtons.forEach((btn) => {
   btn.addEventListener("click", () => {
     modeButtons.forEach((b) => b.classList.remove("active"));
@@ -134,6 +145,77 @@ modeButtons.forEach((btn) => {
   });
 });
 
-// Init
+// Search & Autocomplete API
+async function fetchWatchSuggestions(query) {
+  if (!query || query.trim().length === 0) {
+    autocompleteDropdown.style.display = "none";
+    return;
+  }
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/v1/watches/search?q=${encodeURIComponent(query.trim())}`, {
+      headers: {
+        "x-api-key": API_KEY,
+        "Content-Type": "application/json"
+      }
+    });
+
+    if (!response.ok) {
+      console.error("API response error:", response.status);
+      return;
+    }
+
+    const data = await response.json();
+    renderSuggestions(data.results || []);
+  } catch (err) {
+    console.error("Fetch failed:", err);
+  }
+}
+
+function renderSuggestions(watchesList) {
+  autocompleteDropdown.innerHTML = "";
+
+  if (watchesList.length === 0) {
+    autocompleteDropdown.style.display = "none";
+    return;
+  }
+
+  watchesList.forEach((watch) => {
+    const item = document.createElement("div");
+    item.className = "autocomplete-item";
+    item.innerHTML = `
+      <span>${watch.brand} ${watch.model}</span>
+      <span class="item-sub">${watch.reference_number}</span>
+    `;
+
+    item.addEventListener("click", () => {
+      searchInput.value = `${watch.brand} ${watch.model}`;
+      selectedWatch = watch;
+      autocompleteDropdown.style.display = "none";
+    });
+
+    autocompleteDropdown.appendChild(item);
+  });
+
+  autocompleteDropdown.style.display = "block";
+}
+
+// Typing listener with debounce
+searchInput.addEventListener("input", (e) => {
+  selectedWatch = null;
+  clearTimeout(debounceTimer);
+  debounceTimer = setTimeout(() => {
+    fetchWatchSuggestions(e.target.value);
+  }, 250);
+});
+
+// Close dropdown on outside click
+document.addEventListener("click", (e) => {
+  if (!searchInput.contains(e.target) && !autocompleteDropdown.contains(e.target)) {
+    autocompleteDropdown.style.display = "none";
+  }
+});
+
+// Initial load
 renderEmptyRows(MODE_CONFIG.easy.maxGuesses);
 updateSilhouetteButton();
