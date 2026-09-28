@@ -235,6 +235,11 @@ body {
   align-items: center;
 }
 
+.silhouette-header {
+  justify-content: center;
+  width: 100%;
+}
+
 .silhouette-display {
   width: 100%;
   height: 200px;

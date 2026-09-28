@@ -25,7 +25,6 @@ const ackHelpBtn = document.getElementById("ackHelpBtn");
 // Silhouette Elements
 const silhouetteBtn = document.getElementById("silhouetteBtn");
 const silhouetteModal = document.getElementById("silhouetteModal");
-const closeSilhouetteBtn = document.getElementById("closeSilhouetteBtn");
 const ackSilhouetteBtn = document.getElementById("ackSilhouetteBtn");
 const gridRowsContainer = document.getElementById("gridRows");
 
@@ -75,7 +74,6 @@ function closeSilhouette() {
 }
 
 silhouetteBtn.addEventListener("click", openSilhouette);
-closeSilhouetteBtn.addEventListener("click", closeSilhouette);
 ackSilhouetteBtn.addEventListener("click", closeSilhouette);
 
 silhouetteModal.addEventListener("click", (e) => {
