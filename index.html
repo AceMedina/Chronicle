@@ -54,6 +54,7 @@
         <input type="text" id="searchInput" class="game-search-input" placeholder="Search watch" autocomplete="off">
         <div class="autocomplete-dropdown" id="autocompleteDropdown" style="display: none;"></div>
       </div>
+      <button class="silhouette-btn" id="silhouetteBtn">Silhouette</button>
       <button class="guess-submit-btn" id="guessSubmitBtn">GUESS</button>
     </section>
 
@@ -69,16 +70,8 @@
         <div class="col-header">Price (PHP)</div>
       </div>
 
-      <!-- 7 Guess rows -->
-      <div class="grid-rows" id="gridRows">
-        <div class="guess-row empty-row" data-row="1"><span class="row-num">1</span></div>
-        <div class="guess-row empty-row" data-row="2"><span class="row-num">2</span></div>
-        <div class="guess-row empty-row" data-row="3"><span class="row-num">3</span></div>
-        <div class="guess-row empty-row" data-row="4"><span class="row-num">4</span></div>
-        <div class="guess-row empty-row" data-row="5"><span class="row-num">5</span></div>
-        <div class="guess-row empty-row" data-row="6"><span class="row-num">6</span></div>
-        <div class="guess-row empty-row" data-row="7"><span class="row-num">7</span></div>
-      </div>
+      <!-- Dynamic rows container -->
+      <div class="grid-rows" id="gridRows"></div>
     </section>
   </main>
 
@@ -109,6 +102,29 @@
       </div>
 
       <button class="modal-ack-btn" id="ackHelpBtn">Got it</button>
+    </div>
+  </div>
+
+  <!-- Silhouette modal -->
+  <div class="modal-overlay" id="silhouetteModal">
+    <div class="modal-card silhouette-card">
+      <div class="modal-header">
+        <h2 class="modal-title">Watch Silhouette</h2>
+        <button class="modal-close" id="closeSilhouetteBtn" aria-label="Close">×</button>
+      </div>
+
+      <div class="silhouette-display" id="silhouetteDisplay">
+        <div class="silhouette-placeholder" id="silhouettePlaceholder">
+          <svg viewBox="0 0 100 100" class="watch-silhouette-svg">
+            <rect x="36" y="6" width="28" height="24" rx="3" fill="#212121"/>
+            <rect x="36" y="70" width="28" height="24" rx="3" fill="#212121"/>
+            <circle cx="50" cy="50" r="26" fill="#212121"/>
+            <rect x="75" y="47" width="5" height="6" rx="1.5" fill="#212121"/>
+          </svg>
+        </div>
+      </div>
+
+      <button class="modal-ack-btn" id="ackSilhouetteBtn">Close</button>
     </div>
   </div>
 
