@@ -11,17 +11,75 @@
 </head>
 <body>
 
-  <!-- Help button -->
+  <!-- Landing help button -->
   <button class="help-btn" id="openHelpBtn" aria-label="Help">?</button>
 
   <!-- Landing page -->
-  <main class="landing-view">
+  <main class="landing-view" id="landingView">
     <div class="landing-content">
       <h1 class="logo-title">CHRONICLE</h1>
       <p class="tagline">The Daily Watch Puzzle.</p>
       <p class="sub-tagline">Guess the mystery watch!</p>
       <button class="play-btn" id="playBtn">Play</button>
     </div>
+  </main>
+
+  <!-- Game view -->
+  <main class="game-view" id="gameView" style="display: none;">
+    <!-- Game header -->
+    <header class="game-header">
+      <div class="header-left">
+        <button class="nav-logo-btn" id="navLogoBtn" title="Back to Home">
+          <span class="logo-mini">CHRONICLE</span>
+        </button>
+        <div class="header-divider"></div>
+        <span class="header-tag">Guess the Watch</span>
+      </div>
+
+      <div class="header-right">
+        <!-- Difficulty modes -->
+        <div class="mode-toggle">
+          <button class="mode-btn active" data-mode="easy">Easy</button>
+          <button class="mode-btn" data-mode="medium">Medium</button>
+          <button class="mode-btn" data-mode="hard">Hard</button>
+        </div>
+        <!-- In-game help button -->
+        <button class="help-btn in-game-help" id="inGameHelpBtn" aria-label="Help">?</button>
+      </div>
+    </header>
+
+    <!-- Search section -->
+    <section class="game-search-area">
+      <div class="search-input-wrapper">
+        <input type="text" id="searchInput" class="game-search-input" placeholder="Search watch" autocomplete="off">
+        <div class="autocomplete-dropdown" id="autocompleteDropdown" style="display: none;"></div>
+      </div>
+      <button class="guess-submit-btn" id="guessSubmitBtn">GUESS</button>
+    </section>
+
+    <!-- 7-Attribute grid -->
+    <section class="game-grid-container">
+      <div class="grid-headers">
+        <div class="col-header">Brand</div>
+        <div class="col-header">Origin</div>
+        <div class="col-header">Category</div>
+        <div class="col-header">Movement</div>
+        <div class="col-header">Size</div>
+        <div class="col-header">Year</div>
+        <div class="col-header">Price (PHP)</div>
+      </div>
+
+      <!-- 7 Guess rows -->
+      <div class="grid-rows" id="gridRows">
+        <div class="guess-row empty-row" data-row="1"><span class="row-num">1</span></div>
+        <div class="guess-row empty-row" data-row="2"><span class="row-num">2</span></div>
+        <div class="guess-row empty-row" data-row="3"><span class="row-num">3</span></div>
+        <div class="guess-row empty-row" data-row="4"><span class="row-num">4</span></div>
+        <div class="guess-row empty-row" data-row="5"><span class="row-num">5</span></div>
+        <div class="guess-row empty-row" data-row="6"><span class="row-num">6</span></div>
+        <div class="guess-row empty-row" data-row="7"><span class="row-num">7</span></div>
+      </div>
+    </section>
   </main>
 
   <!-- Help modal -->
