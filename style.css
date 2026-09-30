@@ -258,7 +258,6 @@ body {
   max-width: 100%;
   max-height: 190px;
   object-fit: contain;
-  /* Darken photo into sharp silhouette */
   filter: brightness(0) contrast(200%);
   user-select: none;
 }
@@ -563,6 +562,8 @@ body {
   border-bottom: none;
 }
 
+/* Keyboard selection & mouse hover highlight */
+.autocomplete-item.selected,
 .autocomplete-item:hover {
   background: #E8F5BD;
 }

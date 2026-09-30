@@ -12,6 +12,9 @@ let isGameOver = false;
 
 let selectedWatch = null;
 let debounceTimer = null;
+let currentSuggestions = [];
+let focusedSuggestionIndex = -1;
+let guessedWatchIds = new Set();
 
 const MODE_CONFIG = {
   easy: {
@@ -171,6 +174,10 @@ async function initNewGame() {
   failedAttempts = 0;
   currentGuessIndex = 0;
   selectedWatch = null;
+  guessedWatchIds.clear();
+  currentSuggestions = [];
+  focusedSuggestionIndex = -1;
+
   searchInput.value = "";
   searchInput.disabled = false;
   guessSubmitBtn.disabled = false;
@@ -235,6 +242,7 @@ playAgainBtn.addEventListener("click", () => {
 // Autocomplete logic
 async function fetchWatchSuggestions(query) {
   if (!query || query.trim().length === 0) {
+    currentSuggestions = [];
     autocompleteDropdown.style.display = "none";
     return;
   }
@@ -250,14 +258,35 @@ async function fetchWatchSuggestions(query) {
     if (!response.ok) return;
 
     const data = await response.json();
-    renderSuggestions(data.results || []);
+    currentSuggestions = data.results || [];
+    renderSuggestions(currentSuggestions);
   } catch (err) {
     console.error("Fetch failed:", err);
   }
 }
 
+function selectSuggestion(watch) {
+  searchInput.value = `${watch.brand} ${watch.model}`;
+  selectedWatch = watch;
+  autocompleteDropdown.style.display = "none";
+  focusedSuggestionIndex = -1;
+}
+
+function updateHighlightedItem() {
+  const items = autocompleteDropdown.querySelectorAll(".autocomplete-item");
+  items.forEach((item, idx) => {
+    if (idx === focusedSuggestionIndex) {
+      item.classList.add("selected");
+      item.scrollIntoView({ block: "nearest" });
+    } else {
+      item.classList.remove("selected");
+    }
+  });
+}
+
 function renderSuggestions(watchesList) {
   autocompleteDropdown.innerHTML = "";
+  focusedSuggestionIndex = -1;
 
   if (watchesList.length === 0) {
     autocompleteDropdown.style.display = "none";
@@ -273,9 +302,7 @@ function renderSuggestions(watchesList) {
     `;
 
     item.addEventListener("click", () => {
-      searchInput.value = `${watch.brand} ${watch.model}`;
-      selectedWatch = watch;
-      autocompleteDropdown.style.display = "none";
+      selectSuggestion(watch);
     });
 
     autocompleteDropdown.appendChild(item);
@@ -284,6 +311,7 @@ function renderSuggestions(watchesList) {
   autocompleteDropdown.style.display = "block";
 }
 
+// Input Typing Listener
 searchInput.addEventListener("input", (e) => {
   selectedWatch = null;
   clearTimeout(debounceTimer);
@@ -292,6 +320,34 @@ searchInput.addEventListener("input", (e) => {
   }, 250);
 });
 
+// Keyboard Navigation & Enter Submission
+searchInput.addEventListener("keydown", (e) => {
+  const isDropdownVisible = autocompleteDropdown.style.display === "block";
+
+  if (e.key === "ArrowDown") {
+    if (!isDropdownVisible || currentSuggestions.length === 0) return;
+    e.preventDefault();
+    focusedSuggestionIndex = (focusedSuggestionIndex + 1) % currentSuggestions.length;
+    updateHighlightedItem();
+  } else if (e.key === "ArrowUp") {
+    if (!isDropdownVisible || currentSuggestions.length === 0) return;
+    e.preventDefault();
+    focusedSuggestionIndex = (focusedSuggestionIndex - 1 + currentSuggestions.length) % currentSuggestions.length;
+    updateHighlightedItem();
+  } else if (e.key === "Enter") {
+    e.preventDefault();
+    if (isDropdownVisible && focusedSuggestionIndex >= 0 && currentSuggestions[focusedSuggestionIndex]) {
+      selectSuggestion(currentSuggestions[focusedSuggestionIndex]);
+    } else {
+      guessSubmitBtn.click();
+    }
+  } else if (e.key === "Escape") {
+    autocompleteDropdown.style.display = "none";
+    focusedSuggestionIndex = -1;
+  }
+});
+
+// Close dropdown on outside click
 document.addEventListener("click", (e) => {
   if (!searchInput.contains(e.target) && !autocompleteDropdown.contains(e.target)) {
     autocompleteDropdown.style.display = "none";
@@ -300,7 +356,6 @@ document.addEventListener("click", (e) => {
 
 // 7-Attribute Comparison Engine
 function evaluateAttribute(guessVal, targetVal, type, config) {
-  // Hard mode: Green if exact, else Grey. No Yellows, no arrows.
   if (currentMode === "hard") {
     const match = guessVal === targetVal;
     return {
@@ -310,7 +365,6 @@ function evaluateAttribute(guessVal, targetVal, type, config) {
     };
   }
 
-  // Exact Match
   if (guessVal === targetVal) {
     return {
       status: "match-green",
@@ -319,7 +373,6 @@ function evaluateAttribute(guessVal, targetVal, type, config) {
     };
   }
 
-  // Text values that missed
   if (type === "text") {
     return {
       status: "match-grey",
@@ -328,7 +381,6 @@ function evaluateAttribute(guessVal, targetVal, type, config) {
     };
   }
 
-  // Numeric comparisons with directional arrows
   const arrow = guessVal < targetVal ? "↑" : "↓";
   let isClose = false;
 
@@ -385,15 +437,20 @@ guessSubmitBtn.addEventListener("click", () => {
     return;
   }
 
+  if (guessedWatchIds.has(selectedWatch.id)) {
+    showToast("You already guessed this watch!");
+    return;
+  }
+
   const config = MODE_CONFIG[currentMode];
   const maxGuesses = config.maxGuesses;
 
-  // Retrieve current row element
   const rows = gridRowsContainer.querySelectorAll(".guess-row");
   const targetRow = rows[currentGuessIndex];
   if (!targetRow) return;
 
-  // Attribute evaluations
+  guessedWatchIds.add(selectedWatch.id);
+
   const evaluations = [
     evaluateAttribute(selectedWatch.brand, targetWatch.brand, "text", config),
     evaluateAttribute(selectedWatch.origin, targetWatch.origin, "text", config),
@@ -404,7 +461,6 @@ guessSubmitBtn.addEventListener("click", () => {
     evaluateAttribute(selectedWatch.price_php, targetWatch.price_php, "price", config)
   ];
 
-  // Populate row tiles
   targetRow.className = "guess-row";
   targetRow.innerHTML = "";
 
@@ -428,16 +484,13 @@ guessSubmitBtn.addEventListener("click", () => {
     return;
   }
 
-  // Failed guess handling
   failedAttempts++;
   updateSilhouetteButton();
 
-  // Clear inputs
   selectedWatch = null;
   searchInput.value = "";
   searchInput.focus();
 
-  // Check out of guesses
   if (currentGuessIndex >= maxGuesses) {
     endGame(false);
   }
