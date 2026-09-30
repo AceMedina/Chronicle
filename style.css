@@ -38,6 +38,7 @@ body {
   justify-content: center;
   transition: transform 0.08s ease, box-shadow 0.08s ease;
   user-select: none;
+  z-index: 10;
 }
 
 .help-btn:hover {
@@ -130,12 +131,12 @@ body {
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(33, 33, 33, 0.45);
+  background: rgba(33, 33, 33, 0.55);
   display: none;
   justify-content: center;
   align-items: center;
   padding: 16px;
-  z-index: 50;
+  z-index: 60;
 }
 
 .modal-overlay.open {
@@ -148,7 +149,7 @@ body {
   box-shadow: 6px 6px 0px #212121;
   border-radius: 8px;
   padding: 24px;
-  max-width: 400px;
+  max-width: 420px;
   width: 100%;
   display: flex;
   flex-direction: column;
@@ -242,19 +243,139 @@ body {
 
 .silhouette-display {
   width: 100%;
-  height: 200px;
+  height: 220px;
   background: #F9FDF0;
   border: 2.5px solid #212121;
   border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 16px;
+  padding: 12px;
+  overflow: hidden;
 }
 
-.watch-silhouette-svg {
-  width: 120px;
-  height: 120px;
+.silhouette-img {
+  max-width: 100%;
+  max-height: 190px;
+  object-fit: contain;
+  /* Darken photo into sharp silhouette */
+  filter: brightness(0) contrast(200%);
+  user-select: none;
+}
+
+/* End Game Card */
+.result-card {
+  max-width: 380px;
+  text-align: center;
+}
+
+.result-header {
+  justify-content: center;
+}
+
+.reveal-card {
+  background: #F9FDF0;
+  border: 2.5px solid #212121;
+  border-radius: 8px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.reveal-image-wrapper {
+  width: 100%;
+  height: 180px;
+  background: #ffffff;
+  border-bottom: 2px solid #212121;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+}
+
+.reveal-watch-img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.reveal-info {
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.reveal-brand {
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: #5B7E3C;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.reveal-model {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #212121;
+}
+
+.reveal-nickname {
+  font-size: 0.85rem;
+  font-weight: 700;
+  font-style: italic;
+  color: #6b7280;
+  margin-bottom: 8px;
+}
+
+.reveal-specs-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  border-top: 1.5px solid #e5e7eb;
+  padding-top: 10px;
+}
+
+.spec-item {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  background: #ffffff;
+  border: 1.5px solid #212121;
+  border-radius: 4px;
+  padding: 4px 8px;
+}
+
+.spec-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #6b7280;
+  text-transform: uppercase;
+}
+
+.spec-val {
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: #212121;
+}
+
+.play-again-btn {
+  background: #A2CB8B;
+  color: #212121;
+  border: 3px solid #212121;
+  box-shadow: 4px 4px 0px #212121;
+  border-radius: 6px;
+  padding: 12px;
+  font-size: 1.15rem;
+  font-weight: 800;
+  font-family: inherit;
+  cursor: pointer;
+  margin-top: 6px;
+}
+
+.play-again-btn:active {
+  transform: translate(2px, 2px);
+  box-shadow: 1.5px 1.5px 0px #212121;
 }
 
 /* Toast message */
@@ -282,7 +403,7 @@ body {
 /* Game view */
 .game-view {
   width: 100%;
-  max-width: 860px;
+  max-width: 900px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -411,6 +532,47 @@ body {
   outline: none;
 }
 
+.autocomplete-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  width: 100%;
+  background: #ffffff;
+  border: 3px solid #212121;
+  box-shadow: 4px 4px 0px #212121;
+  border-radius: 6px;
+  max-height: 220px;
+  overflow-y: auto;
+  z-index: 40;
+}
+
+.autocomplete-item {
+  padding: 10px 14px;
+  cursor: pointer;
+  border-bottom: 1.5px solid #e5e7eb;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #212121;
+  transition: background 0.1s ease;
+}
+
+.autocomplete-item:last-child {
+  border-bottom: none;
+}
+
+.autocomplete-item:hover {
+  background: #E8F5BD;
+}
+
+.autocomplete-item .item-sub {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #6b7280;
+}
+
 .silhouette-btn {
   background: #ffffff;
   color: #212121;
@@ -497,7 +659,7 @@ body {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   gap: 8px;
-  height: 52px;
+  min-height: 54px;
 }
 
 .guess-row.empty-row {
@@ -512,7 +674,53 @@ body {
   font-size: 0.95rem;
 }
 
-/* Mobile */
+/* Guess Tiles */
+.guess-tile {
+  background: #ffffff;
+  border: 2.5px solid #212121;
+  box-shadow: 2px 2px 0px #212121;
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 4px;
+  text-align: center;
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: #212121;
+  overflow: hidden;
+  word-break: break-word;
+  animation: flipTile 0.4s ease forwards;
+}
+
+@keyframes flipTile {
+  0% { transform: rotateX(-90deg); opacity: 0; }
+  100% { transform: rotateX(0deg); opacity: 1; }
+}
+
+.guess-tile.match-green {
+  background-color: #5B7E3C;
+  color: #ffffff;
+}
+
+.guess-tile.match-yellow {
+  background-color: #f59e0b;
+  color: #ffffff;
+}
+
+.guess-tile.match-grey {
+  background-color: #9ca3af;
+  color: #ffffff;
+}
+
+.tile-arrow {
+  font-size: 0.9rem;
+  line-height: 1;
+  margin-top: 2px;
+}
+
+/* Mobile responsive */
 @media (max-width: 650px) {
   .logo-title {
     font-size: 3.6rem;
@@ -532,48 +740,6 @@ body {
   .logo-mini { font-size: 1.8rem; }
   .header-tag, .header-divider { display: none; }
   .mode-btn { padding: 4px 8px; font-size: 0.75rem; }
-  .guess-row { height: 46px; }
+  .guess-tile { font-size: 0.65rem; padding: 4px 2px; }
   .col-header { font-size: 0.65rem; }
-}
-
-/* Autocomplete Dropdown */
-.autocomplete-dropdown {
-  position: absolute;
-  top: calc(100% + 6px);
-  left: 0;
-  width: 100%;
-  background: #ffffff;
-  border: 3px solid #212121;
-  box-shadow: 4px 4px 0px #212121;
-  border-radius: 6px;
-  max-height: 220px;
-  overflow-y: auto;
-  z-index: 40;
-}
-
-.autocomplete-item {
-  padding: 10px 14px;
-  cursor: pointer;
-  border-bottom: 1.5px solid #e5e7eb;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 0.92rem;
-  font-weight: 700;
-  color: #212121;
-  transition: background 0.1s ease;
-}
-
-.autocomplete-item:last-child {
-  border-bottom: none;
-}
-
-.autocomplete-item:hover {
-  background: #E8F5BD;
-}
-
-.autocomplete-item .item-sub {
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: #6b7280;
 }

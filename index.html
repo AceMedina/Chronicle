@@ -83,8 +83,7 @@
         <button class="modal-close" id="closeHelpBtn" aria-label="Close">×</button>
       </div>
 
-      <p class="modal-text">Guess the daily mystery watch in <strong>7 tries</strong>.</p>
-      <p class="modal-text">Each guess tests 7 attributes: Brand, Origin, Category, Movement, Size, Year, and Price.</p>
+      <p class="modal-text">Guess the mystery watch by comparing 7 core attributes against the hidden watch.</p>
 
       <div class="legend-box">
         <div class="legend-row">
@@ -93,13 +92,15 @@
         </div>
         <div class="legend-row">
           <span class="chip chip-yellow"></span>
-          <span><strong>Yellow:</strong> Close / Direction indicator</span>
+          <span><strong>Yellow:</strong> Close (within margin) + Arrow indicator</span>
         </div>
         <div class="legend-row">
           <span class="chip chip-grey"></span>
-          <span><strong>Grey:</strong> No match</span>
+          <span><strong>Grey:</strong> Far / No match</span>
         </div>
       </div>
+
+      <p class="modal-text"><strong>Hard mode</strong> disables yellow highlights and directional clues!</p>
 
       <button class="modal-ack-btn" id="ackHelpBtn">Got it</button>
     </div>
@@ -113,17 +114,53 @@
       </div>
 
       <div class="silhouette-display" id="silhouetteDisplay">
-        <div class="silhouette-placeholder" id="silhouettePlaceholder">
-          <svg viewBox="0 0 100 100" class="watch-silhouette-svg">
-            <rect x="36" y="6" width="28" height="24" rx="3" fill="#212121"/>
-            <rect x="36" y="70" width="28" height="24" rx="3" fill="#212121"/>
-            <circle cx="50" cy="50" r="26" fill="#212121"/>
-            <rect x="75" y="47" width="5" height="6" rx="1.5" fill="#212121"/>
-          </svg>
-        </div>
+        <img id="silhouetteImage" src="" alt="Watch Silhouette" class="silhouette-img">
       </div>
 
       <button class="modal-ack-btn" id="ackSilhouetteBtn">Close</button>
+    </div>
+  </div>
+
+  <!-- End Game Result Modal -->
+  <div class="modal-overlay" id="resultModal">
+    <div class="modal-card result-card">
+      <div class="modal-header result-header">
+        <h2 class="modal-title" id="resultTitle">Victory!</h2>
+      </div>
+
+      <p class="modal-text" id="resultSubtitle">You revealed the secret timepiece!</p>
+
+      <!-- Mystery Watch Reveal Card -->
+      <div class="reveal-card" id="revealCard">
+        <div class="reveal-image-wrapper">
+          <img id="revealWatchImg" src="" alt="Mystery Watch" class="reveal-watch-img">
+        </div>
+        <div class="reveal-info">
+          <span class="reveal-brand" id="revealBrand">ROLEX</span>
+          <h3 class="reveal-model" id="revealModel">Submariner Date</h3>
+          <p class="reveal-nickname" id="revealNickname">"Kermit"</p>
+          <div class="reveal-specs-grid">
+            <div class="spec-item">
+              <span class="spec-label">Ref</span>
+              <span class="spec-val" id="revealRef">126610LV</span>
+            </div>
+            <div class="spec-item">
+              <span class="spec-label">Year</span>
+              <span class="spec-val" id="revealYear">2020</span>
+            </div>
+            <div class="spec-item">
+              <span class="spec-label">Size</span>
+              <span class="spec-val" id="revealSize">41.0mm</span>
+            </div>
+            <div class="spec-item">
+              <span class="spec-label">Price</span>
+              <span class="spec-val" id="revealPrice">₱620,000</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <button class="play-again-btn" id="playAgainBtn">Play Again</button>
     </div>
   </div>
 
