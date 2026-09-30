@@ -130,11 +130,11 @@ silhouetteModal.addEventListener("click", (e) => {
   if (e.target === silhouetteModal) closeSilhouette();
 });
 
-// Full image resolver helper
+// Local image resolver helper
 function getImageUrl(imgPath) {
   if (!imgPath) return "";
   if (imgPath.startsWith("http")) return imgPath;
-  return `${API_BASE_URL}/${imgPath.replace(/^\/+/, "")}`;
+  return imgPath.replace(/^\/+/, "");
 }
 
 // Render empty rows
