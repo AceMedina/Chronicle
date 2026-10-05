@@ -299,9 +299,13 @@ function renderSuggestions(watchesList) {
   watchesList.forEach((watch) => {
     const item = document.createElement("div");
     item.className = "autocomplete-item";
+    
+    // Displays nickname cleanly without quotation marks
+    const nicknameDisplay = watch.nickname ? watch.nickname : "";
+
     item.innerHTML = `
       <span>${watch.brand} ${watch.model}</span>
-      <span class="item-sub">${watch.reference_number}</span>
+      <span class="item-sub">${nicknameDisplay}</span>
     `;
 
     item.addEventListener("click", () => {
