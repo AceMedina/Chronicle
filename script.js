@@ -21,6 +21,7 @@ const MODE_CONFIG = {
     maxGuesses: 10,
     hasSilhouette: true,
     unlockAt: 0,
+    resistanceTol: 50,
     sizeTol: 1.5,
     yearTol: 5,
     priceTolRatio: 0.25,
@@ -30,6 +31,7 @@ const MODE_CONFIG = {
     maxGuesses: 8,
     hasSilhouette: true,
     unlockAt: 2,
+    resistanceTol: 30,
     sizeTol: 1.0,
     yearTol: 3,
     priceTolRatio: 0.15,
@@ -39,6 +41,7 @@ const MODE_CONFIG = {
     maxGuesses: 6,
     hasSilhouette: false,
     unlockAt: 0,
+    resistanceTol: 0,
     sizeTol: 0,
     yearTol: 0,
     priceTolRatio: 0,
@@ -356,11 +359,18 @@ document.addEventListener("click", (e) => {
 
 // 7-Attribute Comparison Engine
 function evaluateAttribute(guessVal, targetVal, type, config) {
+  function getDisplayVal() {
+    if (type === "price") return `₱${guessVal.toLocaleString()}`;
+    if (type === "resistance") return `${guessVal}m`;
+    if (type === "size") return `${guessVal}mm`;
+    return `${guessVal}`;
+  }
+
   if (currentMode === "hard") {
     const match = guessVal === targetVal;
     return {
       status: match ? "match-green" : "match-grey",
-      display: type === "price" ? `₱${guessVal.toLocaleString()}` : `${guessVal}`,
+      display: getDisplayVal(),
       arrow: ""
     };
   }
@@ -368,7 +378,7 @@ function evaluateAttribute(guessVal, targetVal, type, config) {
   if (guessVal === targetVal) {
     return {
       status: "match-green",
-      display: type === "price" ? `₱${guessVal.toLocaleString()}` : `${guessVal}`,
+      display: getDisplayVal(),
       arrow: ""
     };
   }
@@ -384,7 +394,9 @@ function evaluateAttribute(guessVal, targetVal, type, config) {
   const arrow = guessVal < targetVal ? "↑" : "↓";
   let isClose = false;
 
-  if (type === "size") {
+  if (type === "resistance") {
+    isClose = Math.abs(guessVal - targetVal) <= config.resistanceTol;
+  } else if (type === "size") {
     isClose = Math.abs(guessVal - targetVal) <= config.sizeTol;
   } else if (type === "year") {
     isClose = Math.abs(guessVal - targetVal) <= config.yearTol;
@@ -394,11 +406,10 @@ function evaluateAttribute(guessVal, targetVal, type, config) {
   }
 
   const status = isClose ? "match-yellow" : "match-grey";
-  const displayVal = type === "price" ? `₱${guessVal.toLocaleString()}` : `${guessVal}`;
 
   return {
     status,
-    display: displayVal,
+    display: getDisplayVal(),
     arrow: config.allowArrows ? arrow : ""
   };
 }
@@ -451,11 +462,12 @@ guessSubmitBtn.addEventListener("click", () => {
 
   guessedWatchIds.add(selectedWatch.id);
 
+  // Order: Brand -> Category -> Movement -> Resistance -> Size -> Year -> Price
   const evaluations = [
     evaluateAttribute(selectedWatch.brand, targetWatch.brand, "text", config),
-    evaluateAttribute(selectedWatch.origin, targetWatch.origin, "text", config),
     evaluateAttribute(selectedWatch.category, targetWatch.category, "text", config),
     evaluateAttribute(selectedWatch.movement_type, targetWatch.movement_type, "text", config),
+    evaluateAttribute(selectedWatch.water_resistance_m, targetWatch.water_resistance_m, "resistance", config),
     evaluateAttribute(selectedWatch.case_size_mm, targetWatch.case_size_mm, "size", config),
     evaluateAttribute(selectedWatch.year, targetWatch.year, "year", config),
     evaluateAttribute(selectedWatch.price_php, targetWatch.price_php, "price", config)
