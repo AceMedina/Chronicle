@@ -1,6 +1,6 @@
 # CHRONICLE
 
-A web-based watch guessing game inspired by Poeltl. Players try to guess a randomly chosen luxury watch using hints from its specifications.
+A web-based watch guessing game inspired by Wordle. Players try to guess a randomly chosen luxury watch using hints from its specifications.
 
 ---
 
