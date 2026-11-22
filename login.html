@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign In — Chronicle</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Kanit:ital,wght@1,900&family=Plus+Jakarta+Sans:ital,wght@0,600;0,700;0,800;1,800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Top Back Button -->
+  <div class="top-utility-bar left-aligned">
+    <a href="index.html" class="pill-btn secondary nav-link-btn">
+      <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+      <span>Back</span>
+    </a>
+  </div>
+
+  <!-- Full Login View -->
+  <main class="auth-page-view">
+    <div class="auth-page-container">
+      <h1 class="logo-title auth-logo">CHRONICLE</h1>
+      <p class="sub-tagline auth-subtitle">Sign in with your Watch Gallery account</p>
+
+      <div class="auth-card">
+        <!-- Already Signed In State -->
+        <div id="signedInState" style="display: none;">
+          <div class="account-box">
+            <div>
+              <span class="spec-label">Signed in as</span>
+              <h3 id="currentAccountName">username</h3>
+            </div>
+            <button type="button" class="danger-btn" id="signOutBtn">Sign Out</button>
+          </div>
+          <a href="index.html" class="modal-ack-btn full-width-link">Continue to Game</a>
+        </div>
+
+        <!-- Login / Register Form -->
+        <div id="guestAuthState">
+          <div class="auth-tabs">
+            <button type="button" class="auth-tab active" data-tab="login">Login</button>
+            <button type="button" class="auth-tab" data-tab="register">Register</button>
+          </div>
+
+          <form id="loginPageForm" class="auth-form">
+            <input type="text" id="usernameInput" class="modal-input" placeholder="Username" required minlength="3" maxlength="50" autocomplete="username">
+            <input type="password" id="passwordInput" class="modal-input" placeholder="Password" required minlength="4" maxlength="72" autocomplete="current-password">
+            <button type="submit" class="modal-ack-btn" id="submitAuthBtn">Sign In</button>
+          </form>
+
+          <div class="auth-divider"><span>OR</span></div>
+
+          <a href="index.html" class="pill-btn secondary full-width-link">Continue as Guest</a>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const API_BASE_URL = "https://watch-api-eight.vercel.app";
+    const API_KEY = "chronicle-api-002";
+
+    let authMode = "login";
+    let currentUser = JSON.parse(localStorage.getItem("chronicle_user") || "null");
+
+    const signedInState = document.getElementById("signedInState");
+    const guestAuthState = document.getElementById("guestAuthState");
+    const currentAccountName = document.getElementById("currentAccountName");
+    const signOutBtn = document.getElementById("signOutBtn");
+    const authTabs = document.querySelectorAll(".auth-tab");
+    const loginPageForm = document.getElementById("loginPageForm");
+    const submitAuthBtn = document.getElementById("submitAuthBtn");
+
+    function showToast(text) {
+      const existing = document.querySelector(".toast-msg");
+      if (existing) existing.remove();
+      const toast = document.createElement("div");
+      toast.className = "toast-msg";
+      toast.innerText = text;
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 2200);
+    }
+
+    function renderAuthState() {
+      if (currentUser) {
+        signedInState.style.display = "flex";
+        signedInState.style.flexDirection = "column";
+        signedInState.style.gap = "12px";
+        guestAuthState.style.display = "none";
+        currentAccountName.innerText = `@${currentUser.username}`;
+      } else {
+        signedInState.style.display = "none";
+        guestAuthState.style.display = "flex";
+        guestAuthState.style.flexDirection = "column";
+        guestAuthState.style.gap = "12px";
+      }
+    }
+
+    authTabs.forEach((tab) => {
+      tab.addEventListener("click", () => {
+        authTabs.forEach((t) => t.classList.remove("active"));
+        tab.classList.add("active");
+        authMode = tab.dataset.tab;
+        submitAuthBtn.innerText = authMode === "login" ? "Sign In" : "Create Account";
+      });
+    });
+
+    loginPageForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const username = document.getElementById("usernameInput").value.trim();
+      const password = document.getElementById("passwordInput").value;
+      const endpoint = authMode === "login" ? "/api/v1/auth/login" : "/api/v1/auth/register";
+
+      submitAuthBtn.disabled = true;
+      try {
+        const res = await fetch(`${API_BASE_URL}${endpoint}`, {
+          method: "POST",
+          headers: { "x-api-key": API_KEY, "Content-Type": "application/json" },
+          body: JSON.stringify({ username, password })
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          showToast(data.detail || "Authentication failed.");
+          submitAuthBtn.disabled = false;
+          return;
+        }
+        localStorage.setItem("chronicle_user", JSON.stringify(data.user));
+        window.location.href = "index.html";
+      } catch {
+        showToast("Connection error.");
+        submitAuthBtn.disabled = false;
+      }
+    });
+
+    signOutBtn.addEventListener("click", () => {
+      localStorage.removeItem("chronicle_user");
+      currentUser = null;
+      renderAuthState();
+      showToast("Signed out.");
+    });
+
+    renderAuthState();
+  </script>
+</body>
+</html>

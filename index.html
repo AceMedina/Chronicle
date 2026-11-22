@@ -11,16 +11,33 @@
 </head>
 <body>
 
-  <!-- Landing page Help button -->
-  <button class="help-btn" id="openHelpBtn" aria-label="Help">?</button>
+  <!-- Landing top utility bar -->
+  <div class="top-utility-bar" id="landingUtilityBar">
+    <a href="login.html" class="pill-btn nav-link-btn" id="landingAuthBtn">
+      <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      <span id="landingAuthLabel">Sign In</span>
+    </a>
+    <button class="pill-btn secondary" id="landingLeaderboardBtn">
+      <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
+      <span>Leaderboard</span>
+    </button>
+    <button class="pill-btn secondary" id="landingStatsBtn" style="display: none;">
+      <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      <span>Statistics</span>
+    </button>
+    <button class="help-btn" id="openHelpBtn" aria-label="Help">?</button>
+  </div>
 
   <!-- Landing page -->
   <main class="landing-view" id="landingView">
     <div class="landing-content">
       <h1 class="logo-title">CHRONICLE</h1>
       <p class="tagline">The Daily Watch Puzzle.</p>
-      <p class="sub-tagline">Guess the mystery watch!</p>
-      <button class="play-btn" id="playBtn">Play</button>
+      <p class="sub-tagline" id="landingUserGreeting">Guess the mystery watch!</p>
+      <div class="landing-cta-group">
+        <button class="play-btn" id="playDailyBtn">Daily</button>
+        <button class="play-btn classic-cta" id="playClassicBtn">Classic</button>
+      </div>
     </div>
   </main>
 
@@ -32,8 +49,6 @@
         <button class="nav-logo-btn" id="navLogoBtn" title="Back to Home">
           <span class="logo-mini">CHRONICLE</span>
         </button>
-        <div class="header-divider"></div>
-        <span class="header-tag">Guess the Watch</span>
       </div>
 
       <div class="header-right">
@@ -43,12 +58,34 @@
           <button class="mode-btn" data-mode="medium">Medium</button>
           <button class="mode-btn" data-mode="hard">Hard</button>
         </div>
+
+        <button class="icon-nav-btn" id="inGameLeaderboardBtn" title="Leaderboard" aria-label="Leaderboard">
+          <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
+          <span class="btn-label">Leaderboard</span>
+        </button>
+
+        <button class="icon-nav-btn" id="inGameStatsBtn" title="Statistics" aria-label="Statistics">
+          <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          <span class="btn-label">Statistics</span>
+        </button>
+
+        <a href="login.html" class="icon-nav-btn auth-chip nav-link-btn" id="inGameAuthBtn" title="Account">
+          <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          <span class="btn-label" id="inGameAuthLabel">Guest</span>
+        </a>
+
         <button class="help-btn in-game-help" id="inGameHelpBtn" aria-label="Help">?</button>
       </div>
     </header>
 
     <!-- Search section -->
     <section class="game-search-area">
+      <!-- Daily vs Classic toggle -->
+      <div class="game-type-toggle">
+        <button class="type-btn active" data-gametype="daily">Daily</button>
+        <button class="type-btn" data-gametype="classic">Classic</button>
+      </div>
+
       <div class="search-input-wrapper">
         <input type="text" id="searchInput" class="game-search-input" placeholder="Search watch" autocomplete="off">
         <div class="autocomplete-dropdown" id="autocompleteDropdown" style="display: none;"></div>
@@ -74,7 +111,55 @@
     </section>
   </main>
 
-  <!-- Help modal -->
+  <!-- Leaderboard Modal -->
+  <div class="modal-overlay" id="leaderboardModal">
+    <div class="modal-card wide-modal">
+      <div class="modal-header">
+        <h2 class="modal-title">Leaderboard</h2>
+        <button class="modal-close" id="closeLeaderboardBtn" aria-label="Close">×</button>
+      </div>
+
+      <div class="mode-toggle full-width-toggle" id="lbScopeToggle">
+        <button class="mode-btn active" data-scope="all">All-Time</button>
+        <button class="mode-btn" data-scope="today">Daily</button>
+      </div>
+
+      <div class="leaderboard-list" id="leaderboardList"></div>
+    </div>
+  </div>
+
+  <!-- Statistics & Match History Modal -->
+  <div class="modal-overlay" id="statsModal">
+    <div class="modal-card wide-modal">
+      <div class="modal-header">
+        <h2 class="modal-title">Statistics</h2>
+        <button class="modal-close" id="closeStatsBtn" aria-label="Close">×</button>
+      </div>
+
+      <div class="stats-summary-grid">
+        <div class="stat-box">
+          <span class="spec-label">Points</span>
+          <span class="stat-num" id="statTotalPoints">0</span>
+        </div>
+        <div class="stat-box">
+          <span class="spec-label">Win %</span>
+          <span class="stat-num" id="statWinRate">0%</span>
+        </div>
+        <div class="stat-box">
+          <span class="spec-label">Streak</span>
+          <span class="stat-num" id="statCurrentStreak">0</span>
+        </div>
+        <div class="stat-box">
+          <span class="spec-label">Best</span>
+          <span class="stat-num" id="statBestStreak">0</span>
+        </div>
+      </div>
+
+      <div class="history-list" id="historyList"></div>
+    </div>
+  </div>
+
+ <!-- Help modal (Paged: Basics / Modes / Scoring) -->
   <div class="modal-overlay" id="helpModal">
     <div class="modal-card">
       <div class="modal-header">
@@ -82,24 +167,108 @@
         <button class="modal-close" id="closeHelpBtn" aria-label="Close">×</button>
       </div>
 
-      <p class="modal-text">Guess the mystery watch by comparing 7 core attributes against the hidden watch.</p>
+      <div class="mode-toggle help-tabs" id="helpTabs">
+        <button type="button" class="mode-btn active" data-helppage="basics">Basics</button>
+        <button type="button" class="mode-btn" data-helppage="modes">Modes</button>
+        <button type="button" class="mode-btn" data-helppage="scoring">Scoring</button>
+      </div>
 
-      <div class="legend-box">
-        <div class="legend-row">
-          <span class="chip chip-green"></span>
-          <span><strong>Green:</strong> Exact match</span>
+      <!-- Page 1: Basics -->
+      <div class="help-page active" data-helppage="basics">
+        <p class="modal-text">Pick a watch to check 7 details against the hidden watch.</p>
+        <div class="legend-box">
+          <div class="legend-row">
+            <span class="chip chip-green"></span>
+            <span><strong>Green:</strong> Exact match</span>
+          </div>
+          <div class="legend-row">
+            <span class="chip chip-yellow"></span>
+            <span><strong>Yellow:</strong> Close value</span>
+          </div>
+          <div class="legend-row">
+            <span class="chip chip-grey"></span>
+            <span><strong>Grey:</strong> No match</span>
+          </div>
         </div>
-        <div class="legend-row">
-          <span class="chip chip-yellow"></span>
-          <span><strong>Yellow:</strong> Close (within margin) + Arrow indicator</span>
-        </div>
-        <div class="legend-row">
-          <span class="chip chip-grey"></span>
-          <span><strong>Grey:</strong> Far / No match</span>
+        <div class="rule-card">
+          <div class="rule-card-head">
+            <span>Arrows</span>
+            <span class="rule-tag">↑ / ↓</span>
+          </div>
+          <p class="rule-card-desc">Arrows show if the hidden watch is higher or lower.</p>
         </div>
       </div>
 
-      <p class="modal-text"><strong>Hard mode</strong> disables yellow highlights and directional clues!</p>
+      <!-- Page 2: Modes -->
+      <div class="help-page" data-helppage="modes">
+        <div class="rule-card">
+          <div class="rule-card-head">
+            <span>Daily</span>
+            <span class="rule-tag accent">1 / Day</span>
+          </div>
+          <p class="rule-card-desc">One shared watch per day. Resets at midnight.</p>
+        </div>
+        <div class="rule-card">
+          <div class="rule-card-head">
+            <span>Classic</span>
+            <span class="rule-tag">Unlimited</span>
+          </div>
+          <p class="rule-card-desc">Play random watches anytime.</p>
+        </div>
+        <div class="rule-card">
+          <div class="rule-card-head">
+            <span>Easy</span>
+            <span class="rule-tag">10 Tries</span>
+          </div>
+          <p class="rule-card-desc">Wide clues, arrows, and free silhouette.</p>
+        </div>
+        <div class="rule-card">
+          <div class="rule-card-head">
+            <span>Medium</span>
+            <span class="rule-tag">8 Tries</span>
+          </div>
+          <p class="rule-card-desc">Tighter clues. Silhouette unlocks after 2 misses.</p>
+        </div>
+        <div class="rule-card">
+          <div class="rule-card-head">
+            <span>Hard</span>
+            <span class="rule-tag">6 Tries</span>
+          </div>
+          <p class="rule-card-desc">Exact matches only. No yellow, arrows, or silhouette.</p>
+        </div>
+      </div>
+
+      <!-- Page 3: Scoring -->
+      <div class="help-page" data-helppage="scoring">
+        <div class="rule-card">
+          <div class="rule-card-head">
+            <span>Win Points</span>
+            <span class="rule-tag">50 / 80 / 120</span>
+          </div>
+          <p class="rule-card-desc">Easy gives 50 pts, Medium 80 pts, and Hard 120 pts.</p>
+        </div>
+        <div class="rule-card">
+          <div class="rule-card-head">
+            <span>Unused Tries</span>
+            <span class="rule-tag">+5 / +8 / +12</span>
+          </div>
+          <p class="rule-card-desc">Earn extra points for every try left over.</p>
+        </div>
+        <div class="rule-card">
+          <div class="rule-card-head">
+            <span>Daily Bonus</span>
+            <span class="rule-tag accent">+25 PTS</span>
+          </div>
+          <p class="rule-card-desc">Added when you solve the Daily watch.</p>
+        </div>
+        <div class="rule-card">
+          <div class="rule-card-head">
+            <span>Win Streak</span>
+            <span class="rule-tag accent">Up to +50 PTS</span>
+          </div>
+          <p class="rule-card-desc">Win games in a row for +5 pts per streak level.</p>
+        </div>
+      </div>
 
       <button class="modal-ack-btn" id="ackHelpBtn">Got it</button>
     </div>
@@ -128,6 +297,7 @@
       </div>
 
       <p class="modal-text" id="resultSubtitle">You revealed the secret timepiece!</p>
+      <div class="earned-pts-badge" id="earnedPtsBadge">+0 PTS</div>
 
       <div class="reveal-card" id="revealCard">
         <div class="reveal-image-wrapper">
@@ -158,7 +328,7 @@
         </div>
       </div>
 
-      <button class="play-again-btn" id="playAgainBtn">Play Again</button>
+      <button class="play-again-btn" id="playAgainBtn">Play Classic</button>
     </div>
   </div>
 
