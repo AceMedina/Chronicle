@@ -46,8 +46,8 @@
           </div>
 
           <form id="loginPageForm" class="auth-form">
-            <input type="text" id="usernameInput" class="modal-input" placeholder="Username" required minlength="3" maxlength="50" autocomplete="username">
-            <input type="password" id="passwordInput" class="modal-input" placeholder="Password" required minlength="4" maxlength="72" autocomplete="current-password">
+            <input type="text" id="usernameInput" class="modal-input" placeholder="Username" required minlength="3" maxlength="20" autocomplete="username">
+            <input type="password" id="passwordInput" class="modal-input" placeholder="Password" required minlength="8" maxlength="72" autocomplete="current-password">
             <button type="submit" class="modal-ack-btn" id="submitAuthBtn">Sign In</button>
           </form>
 
@@ -63,6 +63,9 @@
     const API_BASE_URL = "https://watch-api-eight.vercel.app";
     const API_KEY = "chronicle-api-002";
 
+    const USERNAME_REGEX = /^[a-zA-Z0-9_]{3,20}$/;
+    const PASSWORD_REGEX = /^(?=.*[A-Za-z])(?=.*\d).{8,}$/;
+
     let authMode = "login";
     let currentUser = JSON.parse(localStorage.getItem("chronicle_user") || "null");
 
@@ -72,6 +75,7 @@
     const signOutBtn = document.getElementById("signOutBtn");
     const authTabs = document.querySelectorAll(".auth-tab");
     const loginPageForm = document.getElementById("loginPageForm");
+    const passwordInput = document.getElementById("passwordInput");
     const submitAuthBtn = document.getElementById("submitAuthBtn");
 
     function showToast(text) {
@@ -81,7 +85,21 @@
       toast.className = "toast-msg";
       toast.innerText = text;
       document.body.appendChild(toast);
-      setTimeout(() => toast.remove(), 2200);
+      setTimeout(() => toast.remove(), 2500);
+    }
+
+    function parseApiError(data, status) {
+      if (status === 429) {
+        return "Too many attempts. Please wait a minute and try again.";
+      }
+      if (data && Array.isArray(data.detail) && data.detail.length > 0) {
+        const msg = data.detail[0].msg || "Invalid input.";
+        return msg.replace(/^Value error,\s*/i, "");
+      }
+      if (data && typeof data.detail === "string") {
+        return data.detail;
+      }
+      return "Authentication failed.";
     }
 
     function renderAuthState() {
@@ -104,6 +122,7 @@
         authTabs.forEach((t) => t.classList.remove("active"));
         tab.classList.add("active");
         authMode = tab.dataset.tab;
+        passwordInput.autocomplete = authMode === "login" ? "current-password" : "new-password";
         submitAuthBtn.innerText = authMode === "login" ? "Sign In" : "Create Account";
       });
     });
@@ -111,7 +130,18 @@
     loginPageForm.addEventListener("submit", async (e) => {
       e.preventDefault();
       const username = document.getElementById("usernameInput").value.trim();
-      const password = document.getElementById("passwordInput").value;
+      const password = passwordInput.value;
+
+      if (!USERNAME_REGEX.test(username)) {
+        showToast("Username must be 3-20 chars (letters, numbers, underscores).");
+        return;
+      }
+
+      if (authMode === "register" && !PASSWORD_REGEX.test(password)) {
+        showToast("Password must be 8+ chars with at least 1 letter and 1 number.");
+        return;
+      }
+
       const endpoint = authMode === "login" ? "/api/v1/auth/login" : "/api/v1/auth/register";
 
       submitAuthBtn.disabled = true;
@@ -123,7 +153,7 @@
         });
         const data = await res.json();
         if (!res.ok) {
-          showToast(data.detail || "Authentication failed.");
+          showToast(parseApiError(data, res.status));
           submitAuthBtn.disabled = false;
           return;
         }
