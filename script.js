@@ -10,6 +10,8 @@ let currentGameType = "daily"; // "daily" or "classic"
 let failedAttempts = 0;
 let currentGuessIndex = 0;
 let isGameOver = false;
+let currentDailyDate = null;
+let submittedGuesses = [];
 
 let selectedWatch = null;
 let debounceTimer = null;
@@ -123,6 +125,37 @@ const autocompleteDropdown = document.getElementById("autocompleteDropdown");
 const guessSubmitBtn = document.getElementById("guessSubmitBtn");
 const gridRowsContainer = document.getElementById("gridRows");
 
+// Daily Persistence Key Helpers
+function getManilaDateKey() {
+  return currentDailyDate || new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Manila" });
+}
+
+function getDailyStorageKey() {
+  const userScope = currentUser ? `user_${currentUser.id}` : "guest";
+  return `chronicle_daily_state_${userScope}_${getManilaDateKey()}`;
+}
+
+function saveDailySnapshot(completedAttempt = null) {
+  if (currentGameType !== "daily" || !targetWatch) return;
+  const payload = {
+    watch_id: targetWatch.id,
+    difficulty: currentMode,
+    guesses: submittedGuesses,
+    completed: Boolean(completedAttempt),
+    attempt: completedAttempt
+  };
+  localStorage.setItem(getDailyStorageKey(), JSON.stringify(payload));
+}
+
+function loadDailySnapshot() {
+  try {
+    const raw = localStorage.getItem(getDailyStorageKey());
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
 // Toast Notification
 function showToast(text) {
   const existing = document.querySelector(".toast-msg");
@@ -227,11 +260,18 @@ function updateSilhouetteButton() {
   }
 }
 
+// Sync Difficulty Button Active State
+function setDifficultyUI(mode) {
+  currentMode = mode;
+  modeButtons.forEach((b) => b.classList.toggle("active", b.dataset.mode === mode));
+}
+
 // Reset Board State
 function resetBoardState() {
   isGameOver = false;
   failedAttempts = 0;
   currentGuessIndex = 0;
+  submittedGuesses = [];
   selectedWatch = null;
   guessedWatchIds.clear();
   currentSuggestions = [];
@@ -247,7 +287,52 @@ function resetBoardState() {
   updateSilhouetteButton();
 }
 
-// Load Today's Daily Puzzle
+// Render a Single Guess Row onto the Grid (used by live play and refresh recovery)
+function renderGuessOnGrid(watchGuess, animate = true) {
+  const config = MODE_CONFIG[currentMode];
+  const rows = gridRowsContainer.querySelectorAll(".guess-row");
+  const targetRow = rows[currentGuessIndex];
+  if (!targetRow) return;
+
+  guessedWatchIds.add(watchGuess.id);
+
+  // Order: Brand -> Category -> Movement -> Resistance -> Size -> Year -> Price
+  const evaluations = [
+    evaluateAttribute(watchGuess.brand, targetWatch.brand, "text", config),
+    evaluateAttribute(watchGuess.category, targetWatch.category, "text", config),
+    evaluateAttribute(watchGuess.movement_type, targetWatch.movement_type, "text", config),
+    evaluateAttribute(watchGuess.water_resistance_m, targetWatch.water_resistance_m, "resistance", config),
+    evaluateAttribute(watchGuess.case_size_mm, targetWatch.case_size_mm, "size", config),
+    evaluateAttribute(watchGuess.year, targetWatch.year, "year", config),
+    evaluateAttribute(watchGuess.price_php, targetWatch.price_php, "price", config)
+  ];
+
+  targetRow.className = "guess-row";
+  targetRow.innerHTML = "";
+
+  evaluations.forEach((evalData, idx) => {
+    const tile = document.createElement("div");
+    tile.className = `guess-tile ${evalData.status}`;
+    if (animate) {
+      tile.style.animationDelay = `${idx * 0.1}s`;
+    } else {
+      tile.style.animation = "none";
+    }
+    tile.innerHTML = `
+      <span>${evalData.display}</span>
+      ${evalData.arrow ? `<span class="tile-arrow">${evalData.arrow}</span>` : ""}
+    `;
+    targetRow.appendChild(tile);
+  });
+
+  currentGuessIndex++;
+  if (watchGuess.id !== targetWatch.id) {
+    failedAttempts++;
+  }
+  updateSilhouetteButton();
+}
+
+// Load Today's Daily Puzzle (with Anti-Refresh & Anti-Switch Recovery)
 async function initDailyGame() {
   currentGameType = "daily";
   typeButtons.forEach((b) => b.classList.toggle("active", b.dataset.gametype === "daily"));
@@ -267,13 +352,48 @@ async function initDailyGame() {
     }
 
     targetWatch = data.watch;
+    currentDailyDate = data.date || getManilaDateKey();
     silhouetteImage.src = getImageUrl(targetWatch.image);
 
+    const savedSnapshot = loadDailySnapshot();
+
+    // 1. Completed in Neon DB (authenticated user)
     if (data.already_played && data.attempt) {
+      if (savedSnapshot && savedSnapshot.watch_id === targetWatch.id && Array.isArray(savedSnapshot.guesses)) {
+        setDifficultyUI(savedSnapshot.difficulty || data.attempt.difficulty);
+        renderEmptyRows(MODE_CONFIG[currentMode].maxGuesses);
+        savedSnapshot.guesses.forEach((g) => {
+          submittedGuesses.push(g);
+          renderGuessOnGrid(g, false);
+        });
+      }
       isGameOver = true;
       searchInput.disabled = true;
       guessSubmitBtn.disabled = true;
       showLockedDailyResult(data.attempt);
+      return;
+    }
+
+    // 2. Restore active or completed local snapshot for today's Daily watch
+    if (savedSnapshot && savedSnapshot.watch_id === targetWatch.id) {
+      setDifficultyUI(savedSnapshot.difficulty || currentMode);
+      renderEmptyRows(MODE_CONFIG[currentMode].maxGuesses);
+
+      if (Array.isArray(savedSnapshot.guesses)) {
+        savedSnapshot.guesses.forEach((g) => {
+          submittedGuesses.push(g);
+          renderGuessOnGrid(g, false);
+        });
+      }
+
+      if (savedSnapshot.completed && savedSnapshot.attempt) {
+        isGameOver = true;
+        searchInput.disabled = true;
+        guessSubmitBtn.disabled = true;
+        showLockedDailyResult(savedSnapshot.attempt);
+      } else if (submittedGuesses.length > 0) {
+        showToast(`Resumed today's Daily (${currentMode.toUpperCase()})`);
+      }
     }
   } catch {
     showToast("Could not connect to server.");
@@ -317,12 +437,18 @@ function showLockedDailyResult(attempt) {
   resultModal.classList.add("open");
 }
 
-// Difficulty Toggle
+// Difficulty Toggle (Locked once a round has started!)
 modeButtons.forEach((btn) => {
   btn.addEventListener("click", () => {
-    modeButtons.forEach((b) => b.classList.remove("active"));
-    btn.classList.add("active");
-    currentMode = btn.dataset.mode;
+    const nextMode = btn.dataset.mode;
+    if (nextMode === currentMode) return;
+
+    if (!isGameOver && currentGuessIndex > 0) {
+      showToast("Finish your current round before changing difficulty!");
+      return;
+    }
+
+    setDifficultyUI(nextMode);
     if (currentGameType === "daily") {
       initDailyGame();
     } else {
@@ -687,6 +813,17 @@ async function endGame(won) {
 
   const fallbackPts = computeLocalBasePoints(won);
   const saved = await saveGameResult(won, fallbackPts);
+  const finalPoints = currentUser ? saved.points : fallbackPts;
+
+  if (currentGameType === "daily") {
+    saveDailySnapshot({
+      won,
+      difficulty: currentMode,
+      guesses_used: currentGuessIndex,
+      max_guesses: MODE_CONFIG[currentMode].maxGuesses,
+      points_earned: finalPoints
+    });
+  }
 
   resultTitle.innerText = won ? "VICTORY!" : "GAME OVER";
   resultSubtitle.innerText = won
@@ -725,50 +862,20 @@ guessSubmitBtn.addEventListener("click", () => {
   const config = MODE_CONFIG[currentMode];
   const maxGuesses = config.maxGuesses;
 
-  const rows = gridRowsContainer.querySelectorAll(".guess-row");
-  const targetRow = rows[currentGuessIndex];
-  if (!targetRow) return;
+  submittedGuesses.push(selectedWatch);
+  renderGuessOnGrid(selectedWatch, true);
+  saveDailySnapshot();
 
-  guessedWatchIds.add(selectedWatch.id);
-
-  // Order: Brand -> Category -> Movement -> Resistance -> Size -> Year -> Price
-  const evaluations = [
-    evaluateAttribute(selectedWatch.brand, targetWatch.brand, "text", config),
-    evaluateAttribute(selectedWatch.category, targetWatch.category, "text", config),
-    evaluateAttribute(selectedWatch.movement_type, targetWatch.movement_type, "text", config),
-    evaluateAttribute(selectedWatch.water_resistance_m, targetWatch.water_resistance_m, "resistance", config),
-    evaluateAttribute(selectedWatch.case_size_mm, targetWatch.case_size_mm, "size", config),
-    evaluateAttribute(selectedWatch.year, targetWatch.year, "year", config),
-    evaluateAttribute(selectedWatch.price_php, targetWatch.price_php, "price", config)
-  ];
-
-  targetRow.className = "guess-row";
-  targetRow.innerHTML = "";
-
-  evaluations.forEach((evalData, idx) => {
-    const tile = document.createElement("div");
-    tile.className = `guess-tile ${evalData.status}`;
-    tile.style.animationDelay = `${idx * 0.1}s`;
-    tile.innerHTML = `
-      <span>${evalData.display}</span>
-      ${evalData.arrow ? `<span class="tile-arrow">${evalData.arrow}</span>` : ""}
-    `;
-    targetRow.appendChild(tile);
-  });
-
-  currentGuessIndex++;
-
-  if (selectedWatch.id === targetWatch.id) {
-    endGame(true);
-    return;
-  }
-
-  failedAttempts++;
-  updateSilhouetteButton();
+  const isWin = selectedWatch.id === targetWatch.id;
 
   selectedWatch = null;
   searchInput.value = "";
   searchInput.focus();
+
+  if (isWin) {
+    endGame(true);
+    return;
+  }
 
   if (currentGuessIndex >= maxGuesses) {
     endGame(false);
