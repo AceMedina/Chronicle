@@ -1,12 +1,13 @@
 // API Configuration
 const API_BASE_URL = "https://watch-api-eight.vercel.app";
 const API_KEY = "chronicle-api-002";
+const CATALOG_CACHE_KEY = "watch_catalog_cache";
 
 // Game State
 let allWatches = [];
 let targetWatch = null;
 let currentMode = "easy";
-let currentGameType = "daily"; // "daily" or "classic"
+let currentGameType = "daily";
 let failedAttempts = 0;
 let currentGuessIndex = 0;
 let isGameOver = false;
@@ -124,6 +125,99 @@ const searchInput = document.getElementById("searchInput");
 const autocompleteDropdown = document.getElementById("autocompleteDropdown");
 const guessSubmitBtn = document.getElementById("guessSubmitBtn");
 const gridRowsContainer = document.getElementById("gridRows");
+
+// Watch Catalog Cache Loader
+function getStoredCatalogCache() {
+  try {
+    const raw = localStorage.getItem(CATALOG_CACHE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+function saveCatalogCache(version, watches) {
+  try {
+    localStorage.setItem(CATALOG_CACHE_KEY, JSON.stringify({ version, watches }));
+  } catch (err) {
+    console.error("Failed to save catalog cache:", err);
+  }
+}
+
+async function ensureWatchCatalog() {
+  if (allWatches.length > 0) return allWatches;
+
+  const cached = getStoredCatalogCache();
+  let remoteVersion = null;
+
+  // Step 1: Check version endpoint against localStorage cache
+  try {
+    const verRes = await fetch(`${API_BASE_URL}/api/v1/watches/version`);
+    if (verRes.ok) {
+      const verData = await verRes.json();
+      remoteVersion = verData.version;
+      if (cached && cached.version === remoteVersion && Array.isArray(cached.watches) && cached.watches.length > 0) {
+        allWatches = cached.watches;
+        return allWatches;
+      }
+    }
+  } catch (err) {
+    console.error("Version check failed:", err);
+  }
+
+  // Step 2: Fetch public snapshot and save to localStorage
+  try {
+    const snapRes = await fetch(`${API_BASE_URL}/api/v1/watches/snapshot`);
+    if (snapRes.ok) {
+      const snapData = await snapRes.json();
+      if (Array.isArray(snapData.watches) && snapData.watches.length > 0) {
+        allWatches = snapData.watches;
+        saveCatalogCache(snapData.version || remoteVersion || "snapshot", allWatches);
+        return allWatches;
+      }
+    }
+  } catch (err) {
+    console.error("Snapshot fetch failed:", err);
+  }
+
+  // Step 3: Fall back to authenticated watches endpoint
+  try {
+    const apiRes = await fetch(`${API_BASE_URL}/api/v1/watches`, {
+      headers: { "x-api-key": API_KEY }
+    });
+    if (apiRes.ok) {
+      const apiData = await apiRes.json();
+      if (Array.isArray(apiData.watches) && apiData.watches.length > 0) {
+        allWatches = apiData.watches;
+        saveCatalogCache(remoteVersion || "api", allWatches);
+        return allWatches;
+      }
+    }
+  } catch (err) {
+    console.error("API catalog fallback failed:", err);
+  }
+
+  // Step 4: Final offline fallback to local watches.json
+  try {
+    const localRes = await fetch("watches.json");
+    if (localRes.ok) {
+      const localData = await localRes.json();
+      const list = Array.isArray(localData) ? localData : (localData.watches || []);
+      if (list.length > 0) {
+        allWatches = list;
+        return allWatches;
+      }
+    }
+  } catch (err) {
+    console.error("Local watches.json fallback failed:", err);
+  }
+
+  if (cached && Array.isArray(cached.watches)) {
+    allWatches = cached.watches;
+  }
+
+  return allWatches;
+}
 
 // Daily Persistence Key Helpers
 function getManilaDateKey() {
@@ -287,7 +381,7 @@ function resetBoardState() {
   updateSilhouetteButton();
 }
 
-// Render a Single Guess Row onto the Grid (used by live play and refresh recovery)
+// Render a Single Guess Row onto the Grid
 function renderGuessOnGrid(watchGuess, animate = true) {
   const config = MODE_CONFIG[currentMode];
   const rows = gridRowsContainer.querySelectorAll(".guess-row");
@@ -296,7 +390,6 @@ function renderGuessOnGrid(watchGuess, animate = true) {
 
   guessedWatchIds.add(watchGuess.id);
 
-  // Order: Brand -> Category -> Movement -> Resistance -> Size -> Year -> Price
   const evaluations = [
     evaluateAttribute(watchGuess.brand, targetWatch.brand, "text", config),
     evaluateAttribute(watchGuess.category, targetWatch.category, "text", config),
@@ -332,11 +425,12 @@ function renderGuessOnGrid(watchGuess, animate = true) {
   updateSilhouetteButton();
 }
 
-// Load Today's Daily Puzzle (with Anti-Refresh & Anti-Switch Recovery)
+// Load Today's Daily Puzzle
 async function initDailyGame() {
   currentGameType = "daily";
   typeButtons.forEach((b) => b.classList.toggle("active", b.dataset.gametype === "daily"));
   resetBoardState();
+  ensureWatchCatalog();
 
   try {
     const params = new URLSearchParams();
@@ -357,7 +451,7 @@ async function initDailyGame() {
 
     const savedSnapshot = loadDailySnapshot();
 
-    // 1. Completed in Neon DB (authenticated user)
+    // Completed in Neon DB
     if (data.already_played && data.attempt) {
       if (savedSnapshot && savedSnapshot.watch_id === targetWatch.id && Array.isArray(savedSnapshot.guesses)) {
         setDifficultyUI(savedSnapshot.difficulty || data.attempt.difficulty);
@@ -374,7 +468,7 @@ async function initDailyGame() {
       return;
     }
 
-    // 2. Restore active or completed local snapshot for today's Daily watch
+    // Restore active or completed local snapshot for today's Daily watch
     if (savedSnapshot && savedSnapshot.watch_id === targetWatch.id) {
       setDifficultyUI(savedSnapshot.difficulty || currentMode);
       renderEmptyRows(MODE_CONFIG[currentMode].maxGuesses);
@@ -406,23 +500,10 @@ async function initClassicGame() {
   typeButtons.forEach((b) => b.classList.toggle("active", b.dataset.gametype === "classic"));
   resetBoardState();
 
-  if (allWatches.length === 0) {
-    try {
-      const res = await fetch(`${API_BASE_URL}/api/v1/watches`, {
-        headers: { "x-api-key": API_KEY }
-      });
-      if (res.ok) {
-        const data = await res.json();
-        allWatches = data.watches || [];
-      }
-    } catch (err) {
-      console.error("Failed to load catalog:", err);
-    }
-  }
-
-  if (allWatches.length > 0) {
-    const randomIndex = Math.floor(Math.random() * allWatches.length);
-    targetWatch = allWatches[randomIndex];
+  const watches = await ensureWatchCatalog();
+  if (watches.length > 0) {
+    const randomIndex = Math.floor(Math.random() * watches.length);
+    targetWatch = watches[randomIndex];
     silhouetteImage.src = getImageUrl(targetWatch.image);
   }
 }
@@ -437,7 +518,7 @@ function showLockedDailyResult(attempt) {
   resultModal.classList.add("open");
 }
 
-// Difficulty Toggle (Locked once a round has started!)
+// Difficulty Toggle
 modeButtons.forEach((btn) => {
   btn.addEventListener("click", () => {
     const nextMode = btn.dataset.mode;
@@ -495,7 +576,7 @@ playAgainBtn.addEventListener("click", () => {
   initClassicGame();
 });
 
-// Leaderboard Modal (All-Time & Daily only)
+// Leaderboard Modal
 async function loadLeaderboard() {
   leaderboardList.innerHTML = `<p class="empty-state-text">Loading...</p>`;
   try {
@@ -611,11 +692,23 @@ inGameStatsBtn.addEventListener("click", openStatsModal);
 closeStatsBtn.addEventListener("click", () => statsModal.classList.remove("open"));
 statsModal.addEventListener("click", (e) => { if (e.target === statsModal) statsModal.classList.remove("open"); });
 
-// Autocomplete Logic
+// Autocomplete Logic (Uses Cached Catalog First)
 async function fetchWatchSuggestions(query) {
-  if (!query || query.trim().length === 0) {
+  const clean = (query || "").trim().toLowerCase();
+  if (!clean) {
     currentSuggestions = [];
     autocompleteDropdown.style.display = "none";
+    return;
+  }
+
+  const watches = await ensureWatchCatalog();
+  if (watches.length > 0) {
+    currentSuggestions = watches.filter((w) =>
+      `${w.brand} ${w.model} ${w.nickname || ""} ${w.reference_number || ""}`
+        .toLowerCase()
+        .includes(clean)
+    );
+    renderSuggestions(currentSuggestions);
     return;
   }
 
@@ -678,7 +771,7 @@ function renderSuggestions(watchesList) {
 searchInput.addEventListener("input", (e) => {
   selectedWatch = null;
   clearTimeout(debounceTimer);
-  debounceTimer = setTimeout(() => fetchWatchSuggestions(e.target.value), 250);
+  debounceTimer = setTimeout(() => fetchWatchSuggestions(e.target.value), 180);
 });
 
 searchInput.addEventListener("keydown", (e) => {
@@ -750,7 +843,7 @@ function evaluateAttribute(guessVal, targetVal, type, config) {
   };
 }
 
-// Compute Local Base Points (for Guest display)
+// Compute Local Base Points
 function computeLocalBasePoints(won) {
   if (!won) return 0;
   const cfg = MODE_CONFIG[currentMode];
@@ -773,7 +866,7 @@ function populateRevealCard() {
   revealPrice.innerText = `₱${targetWatch.price_php.toLocaleString()}`;
 }
 
-// Persist Finished Game to Neon DB (backend expects "daily" or "practice")
+// Persist Finished Game to Neon DB
 async function saveGameResult(won, fallbackPts) {
   if (!currentUser || !targetWatch) return { points: fallbackPts, streak: 0 };
 
@@ -882,5 +975,6 @@ guessSubmitBtn.addEventListener("click", () => {
   }
 });
 
-// Sync Auth State on Load
+// Sync Auth State & Preload Watch Catalog Cache
 syncAuthUI();
+ensureWatchCatalog();
