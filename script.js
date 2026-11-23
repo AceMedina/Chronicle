@@ -831,7 +831,7 @@ async function endGame(won) {
     : "Out of attempts! Here is the secret watch:";
 
   if (currentUser) {
-    const streakTag = saved.streak > 1 ? ` • ${saved.streak}x STREAK` : "";
+    const streakTag = (currentGameType === "daily" && saved.streak > 1) ? ` • ${saved.streak}x STREAK` : "";
     earnedPtsBadge.innerText = `+${saved.points} PTS${streakTag}`;
   } else {
     earnedPtsBadge.innerText = `+${fallbackPts} PTS (GUEST)`;
