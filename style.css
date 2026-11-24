@@ -262,6 +262,65 @@ body {
   display: block;
 }
 
+/* Ecosystem switcher */
+.ecosystem-box {
+  margin-top: 4px;
+  padding-top: 12px;
+  border-top: 2px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ecosystem-label {
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: #6b7280;
+  text-align: center;
+}
+
+.ecosystem-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.ecosystem-link {
+  background: #5B7E3C;
+  color: #ffffff;
+  border: 2.5px solid #212121;
+  box-shadow: 2.5px 2.5px 0px #212121;
+  border-radius: 6px;
+  padding: 9px 10px;
+  text-decoration: none;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  transition: transform 0.08s ease, box-shadow 0.08s ease, background-color 0.15s ease;
+}
+
+.ecosystem-link:hover {
+  background: #4e6e32;
+}
+
+.ecosystem-link:active {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0px #212121;
+}
+
+.ecosystem-name {
+  font-size: 0.84rem;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+.ecosystem-desc {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #E8F5BD;
+}
+
 /* Modals */
 .modal-overlay {
   position: fixed;
